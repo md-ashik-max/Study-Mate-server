@@ -32,17 +32,17 @@ async function run() {
         const assignmentCollection = database.collection("assignment");
 
 
-         app.get('/assignment',async(req,res)=>{
+        app.get('/assignment', async (req, res) => {
             const cursor = assignmentCollection.find();
             const result = await cursor.toArray();
             res.send(result)
-          })
-          app.get('/assignment/:id',async(req,res)=>{
+        })
+        app.get('/assignment/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id:new ObjectId(id)}
-            const result =await assignmentCollection.findOne(query)
+            const query = { _id: new ObjectId(id) }
+            const result = await assignmentCollection.findOne(query)
             res.send(result)
-        }) 
+        })
 
 
         app.post('/assignment', async (req, res) => {
@@ -52,13 +52,34 @@ async function run() {
             res.send(result)
         })
 
-        app.delete('/assignment/:id',async(req,res)=>{
+        app.put('/assignment/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)}
-            const result =await assignmentCollection.deleteOne(query)
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updatedAssignment = req.body;
+            const spot = {
+                $set: {
+                    title:updatedAssignment.title,
+                    description:updatedAssignment.description,
+                    mark:updatedAssignment.mark,
+                    image:updatedAssignment.image,
+                    level:updatedAssignment.level,
+                    date:updatedAssignment.date,
+                    email:updatedAssignment.email,
+                },
+            };
+            const result = await assignmentCollection.updateOne(filter, spot, options)
             res.send(result)
-      
-          })
+
+        })
+
+        app.delete('/assignment/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await assignmentCollection.deleteOne(query)
+            res.send(result)
+
+        })
 
 
         // Send a ping to confirm a successful connection
