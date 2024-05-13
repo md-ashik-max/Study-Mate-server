@@ -68,7 +68,7 @@ async function run() {
                     email:updatedAssignment.email,
                 },
             };
-            const result = await assignmentCollection.updateOne(filter, spot, options)
+            const result = await submittedCollection.updateOne(filter, spot, options)
             res.send(result)
 
         })
@@ -83,11 +83,42 @@ async function run() {
 
         // submitted assignment related
 
+        app.get('/submitted', async (req, res) => {
+            const cursor = submittedCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+
+        app.get('/submitted/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await submittedCollection.findOne(query)
+            res.send(result)
+        })
+
+
         app.post('/submitted', async (req, res) => {
             const submittedAssignment = req.body;
-            console.log(submittedAssignment)
             const result = await submittedCollection.insertOne(submittedAssignment)
             res.send(result)
+        })
+
+        app.patch('/submitted/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id: new ObjectId(id) }
+            const updateAssignment = req.body;
+            console.log(updateAssignment)
+            const updateDoc = {
+                $set: {
+                    status: updateAssignment.status,
+                    obtainMark: updateAssignment.obtainMark,
+                    feedback: updateAssignment.feedback,
+                    examinerName: updateAssignment.examinerName,
+                },
+            };
+            const result = await submittedCollection.updateOne(filter, updateDoc)
+            res.send(result)
+
         })
 
 
