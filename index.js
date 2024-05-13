@@ -30,6 +30,7 @@ async function run() {
 
         const database = client.db("assignmentDB");
         const assignmentCollection = database.collection("assignment");
+        const submittedCollection = database.collection("submitted");
 
 
         app.get('/assignment', async (req, res) => {
@@ -47,7 +48,6 @@ async function run() {
 
         app.post('/assignment', async (req, res) => {
             const newAssignment = req.body;
-            console.log(newAssignment)
             const result = await assignmentCollection.insertOne(newAssignment)
             res.send(result)
         })
@@ -79,6 +79,15 @@ async function run() {
             const result = await assignmentCollection.deleteOne(query)
             res.send(result)
 
+        })
+
+        // submitted assignment related
+
+        app.post('/submitted', async (req, res) => {
+            const submittedAssignment = req.body;
+            console.log(submittedAssignment)
+            const result = await submittedCollection.insertOne(submittedAssignment)
+            res.send(result)
         })
 
 
