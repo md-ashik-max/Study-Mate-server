@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
@@ -8,7 +9,12 @@ const port = process.env.PORT || 5000;
 
 // middleware
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+    ],
+    credentials: true
+}));
 app.use(express.json());
 
 
@@ -32,6 +38,21 @@ async function run() {
         const assignmentCollection = database.collection("assignment");
         const submittedCollection = database.collection("submitted");
 
+        // auth related api
+
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            console.log('user for token', user);
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.cookie('token', token, {
+                httpOnly:true,
+                secure:true,
+                sameSite:'none'
+            })
+            .send({ success: true })
+        })
+
+        // assignment related
 
         app.get('/assignment', async (req, res) => {
             const cursor = assignmentCollection.find();
@@ -59,16 +80,16 @@ async function run() {
             const updatedAssignment = req.body;
             const spot = {
                 $set: {
-                    title:updatedAssignment.title,
-                    description:updatedAssignment.description,
-                    mark:updatedAssignment.mark,
-                    image:updatedAssignment.image,
-                    level:updatedAssignment.level,
-                    date:updatedAssignment.date,
-                    email:updatedAssignment.email,
+                    title: updatedAssignment.title,
+                    description: updatedAssignment.description,
+                    mark: updatedAssignment.mark,
+                    image: updatedAssignment.image,
+                    level: updatedAssignment.level,
+                    date: updatedAssignment.date,
+                    email: updatedAssignment.email,
                 },
             };
-            const result = await submittedCollection.updateOne(filter, spot, options)
+            const result = await assignmentCollection.updateOne(filter, spot, options)
             res.send(result)
 
         })
@@ -105,9 +126,8 @@ async function run() {
 
         app.patch('/submitted/:id', async (req, res) => {
             const id = req.params.id;
-            const filter = {_id: new ObjectId(id) }
+            const filter = { _id: new ObjectId(id) }
             const updateAssignment = req.body;
-            console.log(updateAssignment)
             const updateDoc = {
                 $set: {
                     status: updateAssignment.status,
