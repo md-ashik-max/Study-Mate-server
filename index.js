@@ -52,6 +52,13 @@ async function run() {
             .send({ success: true })
         })
 
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+            console.log('log out user', user)
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+        })
+
+
         // assignment related
 
         app.get('/assignment', async (req, res) => {
