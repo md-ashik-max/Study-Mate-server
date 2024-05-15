@@ -12,7 +12,9 @@ const port = process.env.PORT || 5000;
 
 app.use(cors({
     origin: [
-        'http://localhost:5173',
+        // 'http://localhost:5173',
+        'https://study-mate-2766f.web.app',
+        'https://study-mate-2766f.firebaseapp.com'
     ],
     credentials: true
 }));
@@ -52,10 +54,16 @@ const verifyToken = (req, res, next) => {
     })
 }
 
+const cookieOption = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+}
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const database = client.db("assignmentDB");
         const assignmentCollection = database.collection("assignment");
@@ -67,18 +75,14 @@ async function run() {
             const user = req.body;
             console.log('user for token', user?.email);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none'
-            })
+            res.cookie('token', token, cookieOption)
                 .send({ success: true })
         })
 
         app.post('/logout', async (req, res) => {
             const user = req.body;
             console.log('log out user', user)
-            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+            res.clearCookie('token', { ...cookieOption, maxAge: 0 }).send({ success: true })
         })
 
 
@@ -140,21 +144,19 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/submitted/:email', logger, verifyToken, async (req, res) => {
-            const email = req.params.email;
-            if (req.user.email !== email) {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
-            const query = { email: email };
-            const cursor = submittedCollection.find(query);
-            const result = await cursor.toArray();
-            res.send(result)
-        })
+        // app.get('/submitted/:email', async (req, res) => {
+        //     const email = req.params.email;
+        //     const query = { email: email };
+        //     const cursor = submittedCollection.find(query);
+        //     const result = await cursor.toArray();
+        //     res.send(result)
+        // })
 
         app.get('/submitted/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await submittedCollection.findOne(query)
+            console.log(result)
             res.send(result)
         })
 
@@ -184,7 +186,7 @@ async function run() {
 
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
